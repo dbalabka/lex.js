@@ -1,0 +1,7 @@
+To run exersises please double click on one of file:
+ ./lab1.html
+ ./lab2.html
+Your OS should open these files in you default WEB browser.
+You can use any of WEB browser that supports Javascript like Google Chrome, Firefox or Internet Explorer.
+But keep in mind that code was tested using Google Chrome browser, so it's preferable to use
+same browser to avoid any problems.

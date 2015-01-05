@@ -1,0 +1,184 @@
+<html>
+<head>
+    <!-- Latest compiled and minified CSS -->
+    <link rel="stylesheet" href="http://netdna.bootstrapcdn.com/bootstrap/3.1.1/css/bootstrap.min.css">
+
+    <!-- Optional theme -->
+    <link rel="stylesheet" href="http://netdna.bootstrapcdn.com/bootstrap/3.1.1/css/bootstrap-theme.min.css">
+
+    <!-- Latest compiled and minified JavaScript -->
+    <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.11.0/jquery.min.js"></script>
+    <script src="http://netdna.bootstrapcdn.com/bootstrap/3.1.1/js/bootstrap.min.js"></script>
+
+    <script type="text/javascript" src="./js/lex.parser.js"></script>
+    <script type="text/plain" id="default-text-example">procedure SetDisplay(R: Real);
+var
+   S: string[63];
+begin
+   Str(R: 0: 10, S);
+   if S[1] <> '-' then
+      Sign := ' '
+   else
+   begin
+      Delete(S, 1, 1);
+      Sign := '-';
+   end;
+   if Length(S) > 15 + 1 + 10 then
+Error else
+   begin
+      while S[Length(S)] = '0' do
+         Dec(S[0]);
+      if S[Length(S)] = '.' then
+         Dec(S[0]);
+      Number := S;
+end; end;</script>
+    <style>
+        #programm-text {
+            font-family: Consolas, monospace;
+            font-size: 10px;
+        }
+        .tab-content table {
+            font-size: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="page-header">
+            <h1>Конструирование компиляторов</h1>
+            <h2>Лабораторная работа 1</h2>
+            <p class="lead">Лексический анализ</p>
+            <div class="row">
+                <div class="col-md-4">
+                    <form role="form">
+                        <div class="form-group">
+                            <label for="programm-text">Код для анализа</label>
+                            <textarea id="programm-text" class="form-control" rows="15" cols="50"></textarea>
+                        </div>
+                        <button id="btn-proceed" class="btn btn-primary" type="button">Анализировать</button>
+                        <button id="btn-reset" class="btn" type="button">Сбросить изменения</button>
+                    </form>
+                </div>
+                <div class="col-md-8">
+                    <!-- Nav tabs -->
+                    <ul class="nav nav-tabs">
+                        <li class="active"><a href="#tab-result" data-toggle="tab">Результат анализа</a></li>
+                        <li><a href="#tab-terminals" data-toggle="tab">Терминалы</a></li>
+                        <li><a href="#tab-ids" data-toggle="tab">Индификаторы</a></li>
+                        <li><a href="#tab-strings" data-toggle="tab">Строковые конст.</a></li>
+                        <li><a href="#tab-integers" data-toggle="tab">Цифровые конст.</a></li>
+                    </ul>
+
+                    <!-- Tab panes -->
+                    <div class="tab-content">
+                        <div class="tab-pane active" id="tab-result">
+                            <div class="panel panel-default">
+                                <div class="panel-body">
+                                    Начните анализ кода для получения отчëта
+                                </div>
+                            </div>
+                        </div>
+                        <div class="tab-pane" id="tab-terminals">
+
+                        </div>
+                        <div class="tab-pane" id="tab-ids">
+
+                        </div>
+                        <div class="tab-pane" id="tab-strings">
+
+                        </div>
+                        <div class="tab-pane" id="tab-integers">
+
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <script type="text/javascript">
+        $(function () {
+            var reset = function () {
+                $('#programm-text').val($('#default-text-example').text());
+            };
+
+            var tableShow = function (el, header, rows) {
+                el = $(el);
+                var i, table = $('<table class="table table-hover"><thead><tr><th>' +
+                        header.join('</th><th>') +
+                        '</th></tr></thead><tbody></tbody></table>');
+                $(el).append(table);
+                table = table.find('tbody');
+                rows.forEach(function (element, index, array) {
+                    table.append('<tr><td>' + index + '</td><td>' + element + '</td></tr>');
+                });
+            };
+
+            var showTerminalTable = function (el, terminals) {
+                el = $(el);
+                var i, table = $('<table class="table table-hover"><thead>' +
+                        '<tr><th>Индекс</th><th>Символ</th><th>Разделитель</th></tr></thead><tbody></tbody></table>');
+                $(el).append(table);
+                table = table.find('tbody');
+                terminals.forEach(function (element, index, array) {
+                    table.append(
+                            '<tr><td>' + element.index + '</td>' +
+                                    '<td>' + element.value + '</td>' +
+                                    '<td>' + (element.delim ? 'Да' : 'Нет') + '</td></tr>');
+                });
+            };
+
+            $('#btn-proceed').on('click', function () {
+                var parser,
+                    text,
+                    result = $('#tab-result'),
+                    table = $('<table class="table table-hover">' +
+                            '<thead><tr>' +
+                            '<th>Класс</th>' +
+                            '<th>Терминал</th>' +
+                            '<th>Индекс</th>' +
+                            '<th>Лексическая единица</th>' +
+                            '</tr></thead>' +
+                            '<tbody></tbody>' +
+                            '</table>');
+
+                result.html(table);
+                var tbody = table.find('tbody');
+                parser = new lex.Parser();
+                parser.out = function (symbolClass, symbol, index) {
+                    tbody.append('<tr>' +
+                            '<td>' + parser.getClassName(symbolClass) + '</td>' +
+                            '<td>' + (symbolClass === lex.Parser.prototype.CLASS_DELIM ? 'Да' : 'Нет') + '</td>' +
+                            '<td>' + index + '</td>' +
+                            '<td>' + symbol + '</td>');
+                };
+                parser.error = function (msg, charNum) {
+                    var left = this.source.substr(charNum - 20, 19),
+                        char = this.source.substr(charNum - 1, 1),
+                        right = this.source.substr(charNum, 20);
+                    tbody.append('<tr class="danger"><td colspan="4"><div>Parsing error: ' + left +
+                            '<span style="background-color:red;">' + char + '</span>' + right + '</div></td></tr>');
+                };
+                text = $('#programm-text').val();
+                parser.parse(text);
+
+                tableShow('#tab-ids', ['Индекс', 'Идентификатор'], parser.getNonTerminals(parser.CLASS_ID));
+                tableShow('#tab-strings', ['Индекс', 'Строка'], parser.getNonTerminals(parser.CLASS_STR));
+                tableShow('#tab-integers', ['Индекс', 'Число'], parser.getNonTerminals(parser.CLASS_INT));
+                showTerminalTable('#tab-terminals', parser.getTerminals());
+            });
+
+            $('#btn-reset').click(reset);
+
+            reset();
+
+            $('.nav-tabs a').click(function (e) {
+                e.preventDefault();
+                $(this).tab('show');
+            });
+        });
+    </script>
+</body>
+</html>
